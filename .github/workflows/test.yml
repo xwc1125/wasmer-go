@@ -10,7 +10,14 @@ jobs:
     strategy:
       matrix:
         # The job runs on 2 different OS.
-        os: [ubuntu-latest, macos-latest]
+        build: [linux, macos]
+        include:
+          - build: linux
+            os: ubuntu-latest
+            cc: clang-6.0
+          - build: macos
+            os: macos-latest
+            cc: clang
       # As soon as one job fails in the matrix, all the other
       # in-progress jobs are canceled.
       fail-fast: true
@@ -37,23 +44,15 @@ jobs:
           export PATH="$HOME/.cargo/bin:$PATH"
           cargo install just
 
-      - name: Build the runtime
-        shell: bash
-        run: |
-          export PATH="$HOME/.cargo/bin:$PATH"
-          just build-runtime
-
-      - name: Build the library
-        shell: bash
-        run: |
-          export PATH="$HOME/.cargo/bin:$PATH"
-          just build
-
       - name: Run all the tests
         shell: bash
         run: |
-          export PATH="$HOME/.cargo/bin:$PATH"
-          just test
+          CC=${{ matrix.cc }} just test
+
+      - name: Run all the examples
+        shell: bash
+        run: |
+          CC=${{ matrix.cc }} just examples
 # Skipped for now because of Github banning the API request from actions.
 # You can find more info in this PR: https://github.com/wasmerio/wasmer-go/pull/118#issuecomment-588487544
 #       - name: Test bazel build
